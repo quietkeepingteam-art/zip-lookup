@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAH Zipcode Lookup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2430;
+    --paper:#f3f0e8;
+    --panel:#ffffff;
+    --line:#d8d2c2;
+    --slate:#5b6472;
+    --navy:#1f3a5f;
+    --navy-deep:#152a45;
+    --in-person:#1f7a5c;
+    --in-person-bg:#e5f3ec;
+    --phone:#b4530a;
+    --phone-bg:#fbe9d9;
+    --both:#7a3ea1;
+    --both-bg:#f0e3f7;
+    --none-bg:#ece8dc;
+    --none-ink:#6b6455;
+    --focus:#2f6fb0;
+    --radius:10px;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(28,36,48,0.06) 1px, transparent 0);
+    background-size: 22px 22px;
+    color:var(--ink);
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    min-height:100vh;
+    padding:32px 20px 60px;
+  }
+
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+  }
+
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+
+  header h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+
+  header .tag{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--slate);
+    border:1px solid var(--line);
+    background:var(--panel);
+    padding:6px 10px;
+    border-radius:999px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:22px;
+  }
+
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 18px 16px;
+    box-shadow:0 1px 0 rgba(28,36,48,0.03);
+  }
+
+  .card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+
+  .card-head label{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .dot{
+    width:10px;height:10px;border-radius:50%;
+    display:inline-block;
+  }
+  .dot.in-person{background:var(--in-person);}
+  .dot.phone{background:var(--phone);}
+
+  .count{
+    font-size:11px;
+    color:var(--slate);
+    background:var(--paper);
+    border:1px solid var(--line);
+    padding:3px 8px;
+    border-radius:6px;
+  }
+
+  textarea{
+    width:100%;
+    min-height:120px;
+    resize:vertical;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    line-height:1.5;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fcfbf8;
+    color:var(--ink);
+  }
+
+  textarea:focus{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+    background:#fff;
+  }
+
+  .hint{
+    font-size:11px;
+    color:var(--slate);
+    margin-top:8px;
+    line-height:1.5;
+  }
+
+  .saved-status{
+    font-size:11px;
+    color:#8a8577;
+    margin-top:6px;
+    min-height:14px;
+  }
+  .saved-status.just-saved{color:var(--in-person);}
+
+  .card-foot{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:4px;
+  }
+
+  .clear-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--slate);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:5px 10px;
+    cursor:pointer;
+  }
+  .clear-btn:hover{background:var(--paper);}
+  .clear-btn:focus-visible{outline:2px solid var(--focus);}
+
+  .lookup{
+    background:var(--navy-deep);
+    border-radius:var(--radius);
+    padding:24px;
+    color:#fff;
+    margin-bottom:24px;
+  }
+
+  .lookup h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    font-weight:600;
+    margin:0 0 14px;
+    color:#c9d6e6;
+  }
+
+  .lookup-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  #zipInput{
+    flex:1;
+    min-width:220px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px;
+    letter-spacing:0.06em;
+    padding:14px 16px;
+    border-radius:8px;
+    border:2px solid transparent;
+    background:#fff;
+    color:var(--navy-deep);
+  }
+  #zipInput:focus{
+    outline:none;
+    border-color:var(--focus);
+  }
+
+  #checkBtn{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:0 26px;
+    border-radius:8px;
+    border:none;
+    background:var(--focus);
+    color:#fff;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  #checkBtn:hover{background:#3a80c4;}
+  #checkBtn:focus-visible{outline:2px solid #fff; outline-offset:2px;}
+
+  .error-msg{
+    color:#ffcfc2;
+    font-size:12px;
+    margin-top:10px;
+    min-height:16px;
+  }
+
+  /* Result postmark */
+  .result{
+    display:none;
+    align-items:center;
+    gap:22px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:24px;
+  }
+  .result.show{display:flex;}
+
+  @media (max-width:560px){
+    .result{flex-direction:column; text-align:center;}
+  }
+
+  .stamp{
+    flex-shrink:0;
+    width:120px;
+    height:120px;
+  }
+
+  .stamp svg{width:100%;height:100%;display:block;}
+
+  .result-text{flex:1;}
+
+  .result-zip{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px;
+    color:var(--slate);
+    letter-spacing:0.04em;
+    margin-bottom:4px;
+  }
+
+  .result-status{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  .result-detail{
+    font-size:13px;
+    color:var(--slate);
+    line-height:1.5;
+  }
+
+  .badge-inline{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:5px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    margin-right:6px;
+  }
+  .badge-inline.in-person{background:var(--in-person-bg); color:var(--in-person);}
+  .badge-inline.phone{background:var(--phone-bg); color:var(--phone);}
+  .badge-inline.both{background:var(--both-bg); color:var(--both);}
+  .badge-inline.none{background:var(--none-bg); color:var(--none-ink);}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--slate);
+    margin-top:10px;
+  }
+
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:30px 0 18px;
+    color:var(--slate);
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+  }
+  .divider::before,.divider::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .county-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 18px 20px;
+  }
+
+  .county-card h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+
+  .county-card .sub{
+    font-size:12px;
+    color:var(--slate);
+    margin:0 0 14px;
+  }
+
+  .county-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  #countyZipInput{
+    flex:1;
+    min-width:160px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:16px;
+    letter-spacing:0.04em;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fcfbf8;
+    color:var(--ink);
+  }
+  #countyZipInput:focus{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+    background:#fff;
+  }
+
+  #countyCheckBtn, #realtorCheckBtn, #timeSearchBtn{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:0 20px;
+    border-radius:8px;
+    border:1px solid var(--navy);
+    background:#fff;
+    color:var(--navy);
+    cursor:pointer;
+  }
+  #countyCheckBtn:hover, #realtorCheckBtn:hover, #timeSearchBtn:hover{background:var(--navy); color:#fff;}
+  #countyCheckBtn:disabled, #realtorCheckBtn:disabled, #timeSearchBtn:disabled{opacity:0.5; cursor:wait;}
+  #countyCheckBtn:focus-visible, #realtorCheckBtn:focus-visible, #timeSearchBtn:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  .county-result{
+    margin-top:14px;
+    min-height:20px;
+    font-size:14px;
+  }
+  .county-result .county-name{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:17px;
+    color:var(--navy);
+  }
+  .county-result .county-err{
+    color:#b4530a;
+  }
+  .county-result .county-loading{
+    color:var(--slate);
+  }
+
+  .realtor-links{
+    margin-top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .realtor-link{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    text-decoration:none;
+    color:var(--ink);
+    font-size:13px;
+  }
+  .realtor-link:hover{border-color:var(--navy);}
+  .realtor-link .rl-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+  }
+  .realtor-link .rl-arrow{
+    color:var(--focus);
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+  }
+  .realtor-note{
+    font-size:11px;
+    color:var(--slate);
+    margin-top:10px;
+    line-height:1.5;
+  }
+
+  .time-inputs{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:12px;
+  }
+  @media (max-width:640px){
+    .time-inputs{grid-template-columns:1fr;}
+  }
+  .time-inputs input{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fcfbf8;
+    color:var(--ink);
+  }
+  .time-inputs input:focus{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+    background:#fff;
+  }
+
+  .time-slots{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-top:14px;
+  }
+  #timeSearchBtn{
+    margin-top:2px;
+  }
+  @media (max-width:640px){
+    .time-slots{grid-template-columns:1fr;}
+  }
+  .time-slot{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:14px;
+    background:var(--paper);
+    min-height:20px;
+  }
+  .time-slot.empty{display:none;}
+  .time-slot .ts-state{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--slate);
+    margin-bottom:6px;
+  }
+  .time-slot .ts-clock{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:24px;
+    font-weight:600;
+    color:var(--navy);
+    letter-spacing:0.02em;
+  }
+  .time-slot .ts-date{
+    font-size:12px;
+    color:var(--slate);
+    margin-top:4px;
+  }
+  .time-slot .ts-zone{
+    font-size:11px;
+    color:var(--slate);
+    margin-top:2px;
+  }
+  .time-slot .ts-note{
+    font-size:10.5px;
+    color:#b4530a;
+    margin-top:6px;
+    line-height:1.4;
+  }
+  .time-slot.ts-error{
+    color:#b4530a;
+    font-size:12px;
+  }
+
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+
+  @media (prefers-reduced-motion:no-preference){
+    .result.show{animation:pop .22s ease-out;}
+  }
+  @keyframes pop{
+    from{transform:scale(.96); opacity:0;}
+    to{transform:scale(1); opacity:1;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>SAH Zipcode Lookup</h1>
+    <span class="tag">In-person · Phone · No match</span>
+  </header>
+
+  <div class="lookup">
+    <h2>Check a zip code</h2>
+    <div class="lookup-row">
+      <label class="sr-only" for="zipInput">Zip code</label>
+      <input id="zipInput" type="text" inputmode="numeric" placeholder="e.g. 90210" maxlength="10" autocomplete="off">
+      <button id="checkBtn">Check</button>
+    </div>
+    <div class="error-msg" id="errorMsg" role="alert"></div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="stamp" id="stamp"></div>
+    <div class="result-text">
+      <div class="result-zip" id="resultZip"></div>
+      <div class="result-status" id="resultStatus"></div>
+      <div class="result-detail" id="resultDetail"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-head">
+        <label for="inPersonList"><span class="dot in-person"></span>In-person only</label>
+        <span class="count" id="inPersonCount">0 zips</span>
+      </div>
+      <textarea id="inPersonList" placeholder="Paste zip codes here — separated by commas, spaces, or new lines
+e.g.
+90210, 90211
+90212"></textarea>
+      <div class="hint">Any zip codes on this list will be matched as in-person only.</div>
+      <div class="saved-status" id="inPersonSaved"></div>
+      <div class="card-foot"><button class="clear-btn" data-clear="inPersonList">Clear list</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <label for="phoneList"><span class="dot phone"></span>Phone only</label>
+        <span class="count" id="phoneCount">0 zips</span>
+      </div>
+      <textarea id="phoneList" placeholder="Paste zip codes here — separated by commas, spaces, or new lines
+e.g.
+10001, 10002
+10003"></textarea>
+      <div class="hint">Any zip codes on this list will be matched as phone only.</div>
+      <div class="saved-status" id="phoneSaved"></div>
+      <div class="card-foot"><button class="clear-btn" data-clear="phoneList">Clear list</button></div>
+    </div>
+  </div>
+
+  <div class="divider">Extra tool</div>
+
+  <div class="county-card">
+    <h3>County Checker</h3>
+    <p class="sub">Enter a zip code to look up which county it's in.</p>
+    <div class="county-row">
+      <label class="sr-only" for="countyZipInput">Zip code for county lookup</label>
+      <input id="countyZipInput" type="text" inputmode="numeric" placeholder="e.g. 30301" maxlength="10" autocomplete="off">
+      <button id="countyCheckBtn">Find county</button>
+    </div>
+    <div class="county-result" id="countyResult" aria-live="polite"></div>
+  </div>
+
+  <div class="divider">Extra tool</div>
+
+  <div class="county-card">
+    <h3>Realtor License Checker</h3>
+    <p class="sub">Enter a full name and state to jump straight to the right official license-verification search.</p>
+    <div class="county-row">
+      <label class="sr-only" for="realtorName">Full name</label>
+      <input id="realtorName" type="text" placeholder="Full name, e.g. Jane Smith" autocomplete="off" style="flex:1.4; min-width:180px; font-family:'IBM Plex Mono', monospace; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fcfbf8; color:var(--ink);">
+      <label class="sr-only" for="realtorState">State</label>
+      <input id="realtorState" type="text" placeholder="State (e.g. TX or Texas)" autocomplete="off" style="flex:0.8; min-width:140px; font-family:'IBM Plex Mono', monospace; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fcfbf8; color:var(--ink);">
+      <button id="realtorCheckBtn">Find search</button>
+    </div>
+    <div class="county-result" id="realtorResult" aria-live="polite"></div>
+    <div class="realtor-note">There's no single national database of real estate licenses — each state runs its own, and sites like Google or realtor.com can't be auto-scraped for a verified answer. This gives you one-click searches: the state's official license records and ARELLO are the authoritative check; realtor.com and Zillow just show marketing profiles, which can exist even with a lapsed license or belong to someone else with the same name — treat those as a lead, not confirmation.</div>
+  </div>
+
+  <div class="divider">Extra tool</div>
+
+  <div class="county-card">
+    <h3>US Time Lookup</h3>
+    <p class="sub">Enter up to three states (abbreviation or full name) to see the current local time in each — updates live.</p>
+    <div class="time-inputs">
+      <label class="sr-only" for="timeState1">State 1</label>
+      <input id="timeState1" type="text" placeholder="State 1, e.g. TX" autocomplete="off">
+      <label class="sr-only" for="timeState2">State 2</label>
+      <input id="timeState2" type="text" placeholder="State 2, e.g. New York" autocomplete="off">
+      <label class="sr-only" for="timeState3">State 3</label>
+      <input id="timeState3" type="text" placeholder="State 3, e.g. HI" autocomplete="off">
+    </div>
+    <button id="timeSearchBtn">Show times</button>
+    <div class="time-slots" id="timeSlots">
+      <div class="time-slot empty" id="timeSlot1"></div>
+      <div class="time-slot empty" id="timeSlot2"></div>
+      <div class="time-slot empty" id="timeSlot3"></div>
+    </div>
+  </div>
+
+  <footer>Lists are saved automatically in this browser, so they'll be here next time you open this file.</footer>
+</div>
+
+<script>
+(function(){
+  const inPersonEl = document.getElementById('inPersonList');
+  const phoneEl = document.getElementById('phoneList');
+  const inPersonCount = document.getElementById('inPersonCount');
+  const phoneCount = document.getElementById('phoneCount');
+  const zipInput = document.getElementById('zipInput');
+  const checkBtn = document.getElementById('checkBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const resultEl = document.getElementById('result');
+  const resultZip = document.getElementById('resultZip');
+  const resultStatus = document.getElementById('resultStatus');
+  const resultDetail = document.getElementById('resultDetail');
+  const stampEl = document.getElementById('stamp');
+  const inPersonSaved = document.getElementById('inPersonSaved');
+  const phoneSaved = document.getElementById('phoneSaved');
+
+  const STORAGE_KEY_IP = 'sahZipLookup_inPerson';
+  const STORAGE_KEY_PH = 'sahZipLookup_phone';
+  const STORAGE_KEY_IP_TIME = 'sahZipLookup_inPerson_time';
+  const STORAGE_KEY_PH_TIME = 'sahZipLookup_phone_time';
+
+  function storageAvailable(){
+    try{
+      const t = '__sah_test__';
+      localStorage.setItem(t, '1');
+      localStorage.removeItem(t);
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+  const canStore = storageAvailable();
+
+  function formatTime(ts){
+    const d = new Date(ts);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + ' at ' +
+      d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  }
+
+  function restoreLists(){
+    if(!canStore) return;
+    const ip = localStorage.getItem(STORAGE_KEY_IP);
+    const ph = localStorage.getItem(STORAGE_KEY_PH);
+    if(ip){
+      inPersonEl.value = ip;
+      const t = localStorage.getItem(STORAGE_KEY_IP_TIME);
+      if(t) inPersonSaved.textContent = 'Restored from last save · ' + formatTime(t);
+    }
+    if(ph){
+      phoneEl.value = ph;
+      const t = localStorage.getItem(STORAGE_KEY_PH_TIME);
+      if(t) phoneSaved.textContent = 'Restored from last save · ' + formatTime(t);
+    }
+  }
+
+  let saveTimerIP, saveTimerPH;
+  function scheduleSave(which){
+    if(!canStore) return;
+    if(which === 'ip'){
+      clearTimeout(saveTimerIP);
+      saveTimerIP = setTimeout(() => {
+        const now = Date.now();
+        localStorage.setItem(STORAGE_KEY_IP, inPersonEl.value);
+        localStorage.setItem(STORAGE_KEY_IP_TIME, now);
+        inPersonSaved.textContent = 'Saved · ' + formatTime(now);
+        inPersonSaved.classList.add('just-saved');
+        setTimeout(() => inPersonSaved.classList.remove('just-saved'), 1200);
+      }, 500);
+    } else {
+      clearTimeout(saveTimerPH);
+      saveTimerPH = setTimeout(() => {
+        const now = Date.now();
+        localStorage.setItem(STORAGE_KEY_PH, phoneEl.value);
+        localStorage.setItem(STORAGE_KEY_PH_TIME, now);
+        phoneSaved.textContent = 'Saved · ' + formatTime(now);
+        phoneSaved.classList.add('just-saved');
+        setTimeout(() => phoneSaved.classList.remove('just-saved'), 1200);
+      }, 500);
+    }
+  }
+
+  function parseZips(raw){
+    // Match full 5-digit (optionally +4) zips first, then standalone 4-digit ones
+    // (common when a spreadsheet drops a leading zero, e.g. 1234 -> 01234)
+    const matches = raw.match(/\b\d{5}(-\d{4})?\b|\b\d{4}\b/g) || [];
+    const set = new Set();
+    matches.forEach(m => {
+      let base = m.slice(0, 5);
+      if(/^\d{4}$/.test(base)) base = '0' + base;
+      set.add(base.slice(0,5));
+    });
+    return set;
+  }
+
+  function updateCounts(){
+    const ip = parseZips(inPersonEl.value);
+    const ph = parseZips(phoneEl.value);
+    inPersonCount.textContent = ip.size + (ip.size === 1 ? ' zip' : ' zips');
+    phoneCount.textContent = ph.size + (ph.size === 1 ? ' zip' : ' zips');
+    return {ip, ph};
+  }
+
+  inPersonEl.addEventListener('input', () => { updateCounts(); scheduleSave('ip'); });
+  phoneEl.addEventListener('input', () => { updateCounts(); scheduleSave('ph'); });
+
+  document.querySelectorAll('[data-clear]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.clear;
+      document.getElementById(id).value = '';
+      updateCounts();
+      if(id === 'inPersonList'){
+        scheduleSave('ip');
+        inPersonSaved.textContent = '';
+      } else {
+        scheduleSave('ph');
+        phoneSaved.textContent = '';
+      }
+    });
+  });
+
+  function stampSVG(kind){
+    // kind: 'in-person' | 'phone' | 'both' | 'none'
+    const colors = {
+      'in-person': {ring:'#1f7a5c', fill:'#e5f3ec'},
+      'phone':     {ring:'#b4530a', fill:'#fbe9d9'},
+      'both':      {ring:'#7a3ea1', fill:'#f0e3f7'},
+      'none':      {ring:'#8a8577', fill:'#ece8dc'}
+    };
+    const labels = {
+      'in-person': 'IN-PERSON',
+      'phone': 'PHONE',
+      'both': 'BOTH',
+      'none': 'NO MATCH'
+    };
+    const c = colors[kind];
+    const label = labels[kind];
+    // simple icon paths per kind
+    let icon = '';
+    if(kind === 'in-person'){
+      icon = '<path d="M50 30a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 24c12 0 22 7 22 16v4H28v-4c0-9 10-16 22-16Z" fill="'+c.ring+'"/>';
+    } else if(kind === 'phone'){
+      icon = '<path d="M36 32c1-2 4-3 6-2l6 3c2 1 3 4 2 6l-2 4c-1 2 1 6 5 10s8 6 10 5l4-2c2-1 5 0 6 2l3 6c1 2 0 5-2 6l-3 2c-4 2-11 1-18-6s-8-14-6-18l2-3c1-1 1-2-1-2Z" fill="'+c.ring+'"/>';
+    } else if(kind === 'both'){
+      icon = '<path d="M32 40a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm10 26c0-7 8-12 16-12s16 5 16 12v3H42v-3ZM64 30a7 7 0 1 1 0 14 7 7 0 0 1 0-14Z" fill="'+c.ring+'" opacity="0.85"/>';
+    } else {
+      icon = '<path d="M38 38l24 24M62 38l-24 24" stroke="'+c.ring+'" stroke-width="6" stroke-linecap="round"/>';
+    }
+    return '<svg viewBox="0 0 100 100" role="img" aria-label="'+label+' result stamp">' +
+      '<circle cx="50" cy="50" r="46" fill="'+c.fill+'" stroke="'+c.ring+'" stroke-width="3"/>' +
+      '<circle cx="50" cy="50" r="39" fill="none" stroke="'+c.ring+'" stroke-width="1.5" stroke-dasharray="3 4"/>' +
+      icon +
+      '<text x="50" y="86" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" font-weight="600" fill="'+c.ring+'" letter-spacing="1">'+label+'</text>' +
+      '</svg>';
+  }
+
+  function showResult(zip, kind, detail){
+    resultZip.textContent = 'ZIP ' + zip;
+    stampEl.innerHTML = stampSVG(kind);
+    const statusText = {
+      'in-person': 'In-person only',
+      'phone': 'Phone only',
+      'both': 'Listed on both lists',
+      'none': 'No match found'
+    };
+    resultStatus.textContent = statusText[kind];
+    resultDetail.textContent = detail;
+    resultEl.classList.add('show');
+  }
+
+  function runCheck(){
+    errorMsg.textContent = '';
+    const raw = zipInput.value.trim();
+    const found = raw.match(/\b\d{5}\b|\b\d{4}\b/);
+    if(!found){
+      errorMsg.textContent = 'Enter a zip code, e.g. 90210 (or 1234, which becomes 01234).';
+      resultEl.classList.remove('show');
+      return;
+    }
+    let zip = found[0];
+    if(zip.length === 4) zip = '0' + zip;
+    const {ip, ph} = updateCounts();
+    const inIP = ip.has(zip);
+    const inPH = ph.has(zip);
+
+    if(inIP && inPH){
+      showResult(zip, 'both', 'This zip code appears on both the in-person and phone-only lists — worth double-checking for a duplicate entry.');
+    } else if(inIP){
+      showResult(zip, 'in-person', 'This zip code is set for in-person appointments only.');
+    } else if(inPH){
+      showResult(zip, 'phone', 'This zip code is set for phone appointments only.');
+    } else {
+      showResult(zip, 'none', 'This zip code isn\u2019t on either list yet.');
+    }
+  }
+
+  checkBtn.addEventListener('click', runCheck);
+  zipInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') runCheck();
+  });
+
+  // --- County Checker ---
+  const countyZipInput = document.getElementById('countyZipInput');
+  const countyCheckBtn = document.getElementById('countyCheckBtn');
+  const countyResult = document.getElementById('countyResult');
+
+  async function lookupCounty(){
+    const raw = countyZipInput.value.trim();
+    const found = raw.match(/\b\d{5}\b|\b\d{4}\b/);
+    if(!found){
+      countyResult.innerHTML = '<span class="county-err">Enter a zip code, e.g. 30301 (or 1234, which becomes 01234).</span>';
+      return;
+    }
+    let zip = found[0];
+    if(zip.length === 4) zip = '0' + zip;
+    countyCheckBtn.disabled = true;
+    countyResult.innerHTML = '<span class="county-loading">Looking up ' + zip + '\u2026</span>';
+
+    try{
+      const geoRes = await fetch('https://api.zippopotam.us/us/' + zip);
+      if(!geoRes.ok){
+        countyResult.innerHTML = '<span class="county-err">No location found for zip ' + zip + '.</span>';
+        return;
+      }
+      const geoData = await geoRes.json();
+      const place = geoData.places && geoData.places[0];
+      if(!place){
+        countyResult.innerHTML = '<span class="county-err">No location found for zip ' + zip + '.</span>';
+        return;
+      }
+      const lat = place.latitude;
+      const lon = place.longitude;
+      const stateAbbr = place['state abbreviation'] || '';
+      const cityName = place['place name'] || '';
+
+      const fccRes = await fetch('https://geo.fcc.gov/api/census/area?lat=' + lat + '&lon=' + lon + '&format=json');
+      if(!fccRes.ok) throw new Error('county service unavailable');
+      const fccData = await fccRes.json();
+      const county = fccData.results && fccData.results[0] && fccData.results[0].county_name;
+
+      if(county){
+        countyResult.innerHTML = '<span class="county-name">' + county + '</span><br>' +
+          '<span style="color:var(--slate); font-size:12px;">' + cityName + (stateAbbr ? ', ' + stateAbbr : '') + ' \u00b7 zip ' + zip + '</span>';
+      } else {
+        countyResult.innerHTML = '<span class="county-err">Couldn\u2019t determine a county for this zip code.</span>';
+      }
+    } catch(err){
+      countyResult.innerHTML = '<span class="county-err">Couldn\u2019t reach the lookup service. Check your internet connection and try again.</span>';
+    } finally {
+      countyCheckBtn.disabled = false;
+    }
+  }
+
+  countyCheckBtn.addEventListener('click', lookupCounty);
+  countyZipInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') lookupCounty();
+  });
+
+  // --- Realtor License Checker ---
+  const STATE_ABBR = {
+    AL:'Alabama', AK:'Alaska', AZ:'Arizona', AR:'Arkansas', CA:'California',
+    CO:'Colorado', CT:'Connecticut', DE:'Delaware', DC:'District of Columbia',
+    FL:'Florida', GA:'Georgia', HI:'Hawaii', ID:'Idaho', IL:'Illinois',
+    IN:'Indiana', IA:'Iowa', KS:'Kansas', KY:'Kentucky', LA:'Louisiana',
+    ME:'Maine', MD:'Maryland', MA:'Massachusetts', MI:'Michigan', MN:'Minnesota',
+    MS:'Mississippi', MO:'Missouri', MT:'Montana', NE:'Nebraska', NV:'Nevada',
+    NH:'New Hampshire', NJ:'New Jersey', NM:'New Mexico', NY:'New York',
+    NC:'North Carolina', ND:'North Dakota', OH:'Ohio', OK:'Oklahoma', OR:'Oregon',
+    PA:'Pennsylvania', RI:'Rhode Island', SC:'South Carolina', SD:'South Dakota',
+    TN:'Tennessee', TX:'Texas', UT:'Utah', VT:'Vermont', VA:'Virginia',
+    WA:'Washington', WV:'West Virginia', WI:'Wisconsin', WY:'Wyoming',
+    PR:'Puerto Rico', GU:'Guam', VI:'U.S. Virgin Islands', AS:'American Samoa',
+    MP:'Northern Mariana Islands'
+  };
+  // Reverse lookup: full name (lowercase, no punctuation) -> abbreviation
+  const STATE_NAME_TO_ABBR = {};
+  Object.keys(STATE_ABBR).forEach(abbr => {
+    const cleanName = STATE_ABBR[abbr].toLowerCase();
+    STATE_NAME_TO_ABBR[cleanName] = abbr;
+  });
+  // A few common aliases
+  const STATE_ALIASES = {
+    'washington dc':'DC', 'washington d.c.':'DC', 'washington, d.c.':'DC',
+    'd.c.':'DC', 'dc':'DC'
+  };
+
+  function normalizeState(raw){
+    if(!raw) return null;
+    const cleaned = raw.trim().toLowerCase().replace(/\./g, '');
+    if(!cleaned) return null;
+    const upper = raw.trim().toUpperCase().replace(/\./g, '');
+    if(STATE_ABBR[upper]) return {abbr: upper, name: STATE_ABBR[upper]};
+    if(STATE_ALIASES[cleaned]){
+      const abbr = STATE_ALIASES[cleaned];
+      return {abbr: abbr, name: STATE_ABBR[abbr]};
+    }
+    if(STATE_NAME_TO_ABBR[cleaned]){
+      const abbr = STATE_NAME_TO_ABBR[cleaned];
+      return {abbr: abbr, name: STATE_ABBR[abbr]};
+    }
+    return null;
+  }
+
+  const realtorName = document.getElementById('realtorName');
+  const realtorState = document.getElementById('realtorState');
+  const realtorCheckBtn = document.getElementById('realtorCheckBtn');
+  const realtorResult = document.getElementById('realtorResult');
+
+  function findRealtor(){
+    const name = realtorName.value.trim();
+    const stateRaw = realtorState.value.trim();
+
+    if(!name){
+      realtorResult.innerHTML = '<span class="county-err">Enter the person\u2019s full name.</span>';
+      return;
+    }
+    const state = normalizeState(stateRaw);
+    if(!state){
+      realtorResult.innerHTML = '<span class="county-err">Couldn\u2019t recognize that state — try a 2-letter abbreviation (e.g. TX) or the full name.</span>';
+      return;
+    }
+
+    const query = encodeURIComponent(state.name + ' real estate license lookup ' + name);
+    const googleUrl = 'https://www.google.com/search?q=' + query;
+    const arelloUrl = 'https://www.arello.com/search/';
+    const realtorComUrl = 'https://www.google.com/search?q=' + encodeURIComponent('site:realtor.com "' + name + '" ' + state.name);
+    const zillowUrl = 'https://www.google.com/search?q=' + encodeURIComponent('site:zillow.com "' + name + '" ' + state.name + ' agent');
+
+    realtorResult.innerHTML =
+      '<div style="margin-bottom:8px;"><span class="county-name">' + name + '</span> ' +
+      '<span style="color:var(--slate); font-size:12px;">\u00b7 ' + state.name + ' (' + state.abbr + ')</span></div>' +
+      '<div class="realtor-links">' +
+        '<a class="realtor-link" href="' + googleUrl + '" target="_blank" rel="noopener noreferrer">' +
+          '<span class="rl-title">Search ' + state.name + ' official license records</span>' +
+          '<span class="rl-arrow">Open \u2197</span>' +
+        '</a>' +
+        '<a class="realtor-link" href="' + arelloUrl + '" target="_blank" rel="noopener noreferrer">' +
+          '<span class="rl-title">Try ARELLO multi-state license search</span>' +
+          '<span class="rl-arrow">Open \u2197</span>' +
+        '</a>' +
+        '<a class="realtor-link" href="' + realtorComUrl + '" target="_blank" rel="noopener noreferrer">' +
+          '<span class="rl-title">Look for a realtor.com profile <em style="font-style:normal;color:var(--slate);font-weight:400;">(directory, not proof of license)</em></span>' +
+          '<span class="rl-arrow">Open \u2197</span>' +
+        '</a>' +
+        '<a class="realtor-link" href="' + zillowUrl + '" target="_blank" rel="noopener noreferrer">' +
+          '<span class="rl-title">Look for a Zillow agent profile <em style="font-style:normal;color:var(--slate);font-weight:400;">(directory, not proof of license)</em></span>' +
+          '<span class="rl-arrow">Open \u2197</span>' +
+        '</a>' +
+      '</div>';
+  }
+
+  realtorCheckBtn.addEventListener('click', findRealtor);
+  [realtorName, realtorState].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') findRealtor();
+    });
+  });
+
+  // --- US Time Lookup ---
+  // Primary IANA timezone per state. Where a state spans more than one
+  // zone, this uses the zone covering most of its population/area, and
+  // a short note flags the split.
+  const STATE_TIMEZONE = {
+    AL:{tz:'America/Chicago'}, AK:{tz:'America/Anchorage', note:'The Aleutian Islands use Hawaii-Aleutian time instead.'},
+    AZ:{tz:'America/Phoenix', note:'Arizona does not observe daylight saving (Navajo Nation land does).'},
+    AR:{tz:'America/Chicago'}, CA:{tz:'America/Los_Angeles'}, CO:{tz:'America/Denver'},
+    CT:{tz:'America/New_York'}, DE:{tz:'America/New_York'}, DC:{tz:'America/New_York'},
+    FL:{tz:'America/New_York', note:'The Panhandle west of the Apalachicola River uses Central time.'},
+    GA:{tz:'America/New_York'}, HI:{tz:'Pacific/Honolulu'},
+    ID:{tz:'America/Boise', note:'Northern Idaho (Panhandle) uses Pacific time.'},
+    IL:{tz:'America/Chicago'},
+    IN:{tz:'America/Indiana/Indianapolis', note:'A few counties near Chicago and Louisville use Central time.'},
+    IA:{tz:'America/Chicago'},
+    KS:{tz:'America/Chicago', note:'Western Kansas uses Mountain time.'},
+    KY:{tz:'America/New_York', note:'Western Kentucky uses Central time.'},
+    LA:{tz:'America/Chicago'}, ME:{tz:'America/New_York'}, MD:{tz:'America/New_York'}, MA:{tz:'America/New_York'},
+    MI:{tz:'America/Detroit', note:'Four western Upper Peninsula counties use Central time.'},
+    MN:{tz:'America/Chicago'}, MS:{tz:'America/Chicago'}, MO:{tz:'America/Chicago'}, MT:{tz:'America/Denver'},
+    NE:{tz:'America/Chicago', note:'Western Nebraska uses Mountain time.'},
+    NV:{tz:'America/Los_Angeles', note:'West Wendover uses Mountain time.'},
+    NH:{tz:'America/New_York'}, NJ:{tz:'America/New_York'}, NM:{tz:'America/Denver'}, NY:{tz:'America/New_York'},
+    NC:{tz:'America/New_York'},
+    ND:{tz:'America/Chicago', note:'Southwestern North Dakota uses Mountain time.'},
+    OH:{tz:'America/New_York'}, OK:{tz:'America/Chicago'},
+    OR:{tz:'America/Los_Angeles', note:'Malheur County uses Mountain time.'},
+    PA:{tz:'America/New_York'}, RI:{tz:'America/New_York'}, SC:{tz:'America/New_York'},
+    SD:{tz:'America/Chicago', note:'Western South Dakota uses Mountain time.'},
+    TN:{tz:'America/Chicago', note:'Eastern Tennessee (Knoxville, Chattanooga) uses Eastern time.'},
+    TX:{tz:'America/Chicago', note:'The far west (El Paso area) uses Mountain time.'},
+    UT:{tz:'America/Denver'}, VT:{tz:'America/New_York'}, VA:{tz:'America/New_York'},
+    WA:{tz:'America/Los_Angeles'}, WV:{tz:'America/New_York'}, WI:{tz:'America/Chicago'}, WY:{tz:'America/Denver'},
+    PR:{tz:'America/Puerto_Rico'}, GU:{tz:'Pacific/Guam'}, VI:{tz:'America/St_Thomas'},
+    AS:{tz:'Pacific/Pago_Pago'}, MP:{tz:'Pacific/Saipan'}
+  };
+
+  const timeInputs = [
+    document.getElementById('timeState1'),
+    document.getElementById('timeState2'),
+    document.getElementById('timeState3')
+  ];
+  const timeSlots = [
+    document.getElementById('timeSlot1'),
+    document.getElementById('timeSlot2'),
+    document.getElementById('timeSlot3')
+  ];
+  const timeSearchBtn = document.getElementById('timeSearchBtn');
+  let activeZones = [null, null, null]; // {abbr, name, tz, note} | 'error' | null
+  let timeTickHandle = null;
+
+  function zoneAbbrLabel(tz){
+    try{
+      const parts = new Intl.DateTimeFormat('en-US', {timeZone: tz, timeZoneName: 'short'}).formatToParts(new Date());
+      const part = parts.find(p => p.type === 'timeZoneName');
+      return part ? part.value : '';
+    }catch(e){ return ''; }
+  }
+
+  function renderTimeSlot(i){
+    const el = timeSlots[i];
+    const info = activeZones[i];
+    if(!info){
+      el.className = 'time-slot empty';
+      el.innerHTML = '';
+      return;
+    }
+    el.className = 'time-slot';
+    if(info === 'error'){
+      el.classList.add('ts-error');
+      el.innerHTML = 'Couldn\u2019t recognize that state — try a 2-letter abbreviation or full name.';
+      return;
+    }
+    const now = new Date();
+    const clock = now.toLocaleTimeString('en-US', {timeZone: info.tz, hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true});
+    const dateStr = now.toLocaleDateString('en-US', {timeZone: info.tz, weekday:'short', month:'short', day:'numeric'});
+    const zoneLabel = zoneAbbrLabel(info.tz);
+    el.innerHTML =
+      '<div class="ts-state">' + info.name + ' (' + info.abbr + ')</div>' +
+      '<div class="ts-clock">' + clock + '</div>' +
+      '<div class="ts-date">' + dateStr + '</div>' +
+      '<div class="ts-zone">' + zoneLabel + '</div>' +
+      (info.note ? '<div class="ts-note">' + info.note + '</div>' : '');
+  }
+
+  function tickTimes(){
+    for(let i = 0; i < 3; i++){
+      if(activeZones[i] && activeZones[i] !== 'error') renderTimeSlot(i);
+    }
+  }
+
+  function runTimeSearch(){
+    for(let i = 0; i < 3; i++){
+      const raw = timeInputs[i].value.trim();
+      if(!raw){
+        activeZones[i] = null;
+        renderTimeSlot(i);
+        continue;
+      }
+      const state = normalizeState(raw);
+      if(!state || !STATE_TIMEZONE[state.abbr]){
+        activeZones[i] = 'error';
+        renderTimeSlot(i);
+        continue;
+      }
+      const zone = STATE_TIMEZONE[state.abbr];
+      activeZones[i] = {abbr: state.abbr, name: state.name, tz: zone.tz, note: zone.note};
+      renderTimeSlot(i);
+    }
+    if(!timeTickHandle){
+      timeTickHandle = setInterval(tickTimes, 1000);
+    }
+  }
+
+  timeSearchBtn.addEventListener('click', runTimeSearch);
+  timeInputs.forEach(inp => {
+    inp.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') runTimeSearch();
+    });
+  });
+
+  restoreLists();
+  updateCounts();
+
+  if(!canStore){
+    const warn = document.createElement('div');
+    warn.className = 'hint';
+    warn.style.color = '#b4530a';
+    warn.textContent = 'Note: this browser is blocking saved storage (e.g. private/incognito mode), so lists won\u2019t be remembered between visits.';
+    document.querySelector('.lookup').appendChild(warn);
+  }
+})();
+</script>
+</body>
+</html>
